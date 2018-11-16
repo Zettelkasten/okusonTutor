@@ -18,3 +18,10 @@ function getLecture() {
     lecture = /Vorlesung:\W*(.*)\n/gm.exec(text)[1];
     return lecture;
 }
+
+function extractData() {
+    var inputs = Array.from(document.getElementsByTagName('input'));
+    inputs = inputs.filter(input => /^P\d{5,6}$/m.test(input.name));
+    var points = new Map(inputs.map(input => [parseInt(input.name.substring(1)), parseFloat(input.value)]));
+    return points;
+}
