@@ -26,10 +26,35 @@ function extractData() {
     return points;
 }
 
-function saveData(data, lecture=getLecture()) {
-    window.localStorage.setItem(lecture, JSON.stringify(data));
+function mergeData(oldData, newData, exNr = getExerciseNr()) {
+    var data = new Map();
+    newData.forEach((points, matrNr) => {
+        if (oldData.has(matrNr)) {
+            student = Student.from(oldData.get(matrNr));
+            student.setPoints(exNr, points);
+            data.set(matrNr, student);
+        } else {
+            student = new Student(matrNr).setPoints(exNr, points);
+            data.set(matrNr, student);
+        }
+    });
+    return data;
 }
 
-function loadData(lecture=getLecture()) {
-    return JSON.parse(window.localStorage.getItem(lecture));
+function isIterable(value) {
+    return Symbol.iterator in Object(value);
+}
+
+function saveData(data, lecture = getLecture()) {
+    window.localStorage.setItem(lecture, JSON.stringify([...data]));
+}
+
+function loadData(lecture = getLecture()) {
+    console.log(lecture);
+    var data = JSON.parse(window.localStorage.getItem(lecture));
+    if (isIterable(data)) {
+        return new Map(data);
+    } else {
+        return new Map();
+    }
 }
