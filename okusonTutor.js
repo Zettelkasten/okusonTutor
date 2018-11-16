@@ -1,3 +1,20 @@
+class Student {
+    static from(obj) {
+        obj.setPoints = Student.prototype.setPoints;
+        return obj;
+      }
+
+    constructor(matrNr) {
+        this.matrNr = matrNr;
+        this.points = new Object();
+    }
+
+    setPoints(exNr, points) {
+        this.points[exNr] = points;
+        return this;
+    }
+}
+
 function getGroupNr() {
     var groupNr;
     text = document.getElementsByTagName('html')[0].innerText;
