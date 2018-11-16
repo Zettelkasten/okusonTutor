@@ -25,3 +25,11 @@ function extractData() {
     var points = new Map(inputs.map(input => [parseInt(input.name.substring(1)), parseFloat(input.value)]));
     return points;
 }
+
+function saveData(data, lecture=getLecture()) {
+    window.localStorage.setItem(lecture, JSON.stringify(data));
+}
+
+function loadData(lecture=getLecture()) {
+    return JSON.parse(window.localStorage.getItem(lecture));
+}
