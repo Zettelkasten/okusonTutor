@@ -85,10 +85,37 @@ function loadData(lecture = getLecture()) {
     }
 }
 
-setTimeout(() => {
-    if (window.location.pathname.endsWith('/TutorRequest')) {
+
+if (window.location.pathname.endsWith('/TutorRequest')) {
+    setTimeout(() => {
         document.getElementsByName('action')[0].addEventListener('click', function () {
             saveData(mergeData(loadData(), extractData()));
         })
-    }
-}, 500);
+
+    }, 500);
+} else if (window.location.pathname.endsWith('/ShowGlobalStatistics')) {
+    setTimeout(() => {
+        var data = loadData();
+        var titleNodes = Array.from(document.getElementsByTagName('h2')).filter(input => input.innerText.includes('sheet'));
+        titleNodes.map(node => {
+            var exNr = parseInt(/sheet (\d+)$/.exec(node.innerText)[1]);
+            while (node !== null && node.nodeName.toLowerCase().localeCompare('table')) {
+                node = node.nextSibling;
+            }
+            return (exNr, node);
+        }).forEach((node, exNr) => {
+            var cells = node.lastChild.firstChild.cells;
+            for (var i = 0; i < cells.length - 1; i++) {
+                var names = new Array();
+                data.forEach(student => {
+                    if (Math.floor(student.points[exNr+1]) === i) {
+                        names.push(student);
+                    }
+                });
+                names = names.map(student => student.matrNr + ' ' + student.lastName + ', ' + student.firstName);
+                names = names.reduce((a, b) => a + '\n' + b, '');
+                cells[i].firstChild.title = names;
+            }
+        });
+    }, 500);
+};
