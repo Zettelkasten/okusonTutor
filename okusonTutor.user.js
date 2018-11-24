@@ -52,7 +52,7 @@ function getMaxPoints() {
     var re = /<tr>(<td>[\.\d]+<\/td>){5}<td>(\d+)<\/td>(<td>[\.\d]+<\/td>){5}<\/tr>/gm;
     var html = document.body.innerHTML;
     var m;
-    while(m = re.exec(html)) {
+    while (m = re.exec(html)) {
         if (m) {
             points += parseInt(m[2]);
         }
@@ -182,18 +182,14 @@ function loadData(lecture = getLecture()) {
     }
 }
 
-
-if (window.location.pathname.endsWith('/TutorRequest')) {
-    setTimeout(() => {
+(function() {
+    if (window.location.pathname.endsWith('/TutorRequest')) {
         document.getElementsByName('action')[0].addEventListener('click', function () {
             saveData(mergeData(loadData(), extractData()));
         })
-
-    }, 500);
-} else if (window.location.pathname.endsWith('/ShowGlobalStatistics')) {
-    setTimeout(() => {
+    } else if (window.location.pathname.endsWith('/ShowGlobalStatistics')) {
         var data = loadData();
         addOverviewDiagram(data, getMaxPoints(), 20);
         addDiagramLabels(data);
-    }, 500);
-};
+    };
+})();
