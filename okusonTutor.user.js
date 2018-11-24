@@ -30,26 +30,50 @@ class Student {
 }
 
 function getGroupNr() {
-    var text = document.getElementsByTagName('html')[0].innerText;
+    var text = document.body.innerText;
     var groupNr = parseInt(/(Gruppe|Group number):\W*(\d{1,2})/gm.exec(text)[2]);
     return groupNr > 0 ? groupNr : null;
 }
 
 function getExerciseNr() {
-    var text = document.getElementsByTagName('html')[0].innerText;
+    var text = document.body.innerText;
     var exNr = parseInt(/Blatt:\W*(\d{1,2})/gm.exec(text)[1]);
     return exNr;
 }
 
 function getLecture() {
-    var text = document.getElementsByTagName('html')[0].innerText;
+    var text = document.body.innerText;
     var lecture = /Vorlesung:\W*(.*)\n/gm.exec(text)[1];
     return lecture;
 }
 
+function addDiagramLabels(data) {
+    var titleNodes = Array.from(document.getElementsByTagName('h2')).filter(input => input.innerText.includes('sheet'));
+    titleNodes.map(node => {
+        var exNr = parseInt(/sheet (\d+)$/.exec(node.innerText)[1]);
+        while (node !== null && node.nodeName.toLowerCase().localeCompare('table')) {
+            node = node.nextSibling;
+        }
+        return (exNr, node);
+    }).forEach((node, exNr) => {
+        var cells = node.lastChild.firstChild.cells;
+        for (var i = 0; i < cells.length - 1; i++) {
+            var names = new Array();
+            data.forEach(student => {
+                if (Math.floor(student.points[exNr + 1]) === i) {
+                    names.push(student);
+                }
+            });
+            names = names.map(student => student.matrNr + ' ' + student.lastName + ', ' + student.firstName);
+            names = names.reduce((a, b) => a + '\n' + b, '');
+            cells[i].firstChild.title = names;
+        }
+    });
+}
+
 function extractData() {
     var data = new Map();
-    var html = document.getElementsByTagName('html')[0].innerHTML;
+    var html = document.body.innerHTML;
     var inputs = Array.from(document.getElementsByTagName('input'));
     inputs = inputs.filter(input => /^P\d{5,6}$/m.test(input.name));
     var points = new Map(inputs.map(input => {
@@ -108,26 +132,6 @@ if (window.location.pathname.endsWith('/TutorRequest')) {
 } else if (window.location.pathname.endsWith('/ShowGlobalStatistics')) {
     setTimeout(() => {
         var data = loadData();
-        var titleNodes = Array.from(document.getElementsByTagName('h2')).filter(input => input.innerText.includes('sheet'));
-        titleNodes.map(node => {
-            var exNr = parseInt(/sheet (\d+)$/.exec(node.innerText)[1]);
-            while (node !== null && node.nodeName.toLowerCase().localeCompare('table')) {
-                node = node.nextSibling;
-            }
-            return (exNr, node);
-        }).forEach((node, exNr) => {
-            var cells = node.lastChild.firstChild.cells;
-            for (var i = 0; i < cells.length - 1; i++) {
-                var names = new Array();
-                data.forEach(student => {
-                    if (Math.floor(student.points[exNr+1]) === i) {
-                        names.push(student);
-                    }
-                });
-                names = names.map(student => student.matrNr + ' ' + student.lastName + ', ' + student.firstName);
-                names = names.reduce((a, b) => a + '\n' + b, '');
-                cells[i].firstChild.title = names;
-            }
-        });
+        addDiagramLabels(data);
     }, 500);
 };
