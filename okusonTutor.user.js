@@ -47,6 +47,19 @@ function getLecture() {
     return lecture;
 }
 
+function getMaxPoints() {
+    var points = 0;
+    var re = /<tr>(<td>[\.\d]+<\/td>){5}<td>(\d+)<\/td>(<td>[\.\d]+<\/td>){5}<\/tr>/gm;
+    var html = document.body.innerHTML;
+    var m;
+    while(m = re.exec(html)) {
+        if (m) {
+            points += parseInt(m[2]);
+        }
+    }
+    return points;
+}
+
 function addDiagramLabels(data) {
     var titleNodes = Array.from(document.getElementsByTagName('h2')).filter(input => input.innerText.includes('sheet'));
     titleNodes.map(node => {
@@ -69,6 +82,54 @@ function addDiagramLabels(data) {
             cells[i].firstChild.title = names;
         }
     });
+}
+
+function addOverviewDiagram(data, maxpoints, numClasses) {
+    var studentsByPoints = new Map();
+    for (var i = 0; i <= numClasses; i++) {
+        studentsByPoints.set(i, new Array());
+    }
+    data.forEach(student => {
+        points = Object.values(student.points).reduce((a, b) => a + b, 0);
+        student.sum = points;
+        points = Math.floor(points * numClasses / maxpoints);
+        studentsByPoints.get(points).push(student);
+    });
+    var max = 0;
+    var sum = 0;
+    studentsByPoints.forEach(array => {
+        sum += array.length;
+        if (array.length > max) {
+            max = array.length;
+        }
+    });
+    var diagram = '<h2>Overview</h2>\n<table class="pointdistribution">\n<tr class="pddata">';
+    for (var i = 0; i <= numClasses; i++) {
+        var names = studentsByPoints.get(i).map(student => student.matrNr + ' ' + student.sum + ' ' + student.lastName + ', ' + student.firstName);
+        names = names.reduce((a, b) => a + '\n' + b, '');
+        diagram += '<td><img src="images/red.png" alt="" width="10px" height="' + Math.floor(200 * studentsByPoints.get(i).length / max) + 'px" title="' + names + '" /></td>';
+    }
+    diagram += '<td class="summary"></td></tr>\n<tr class="pdtext">';
+    for (var i = 0; i <= numClasses; i++) {
+        diagram += '<td>' + studentsByPoints.get(i).length + '</td>';
+    }
+    diagram += '<td class="summary">Sum: ' + sum + '</td></tr>\n<tr class="pdpercentage">';
+    for (var i = 0; i <= numClasses; i++) {
+        diagram += '<td>' + Math.floor(studentsByPoints.get(i).length * 100 / sum) + '</td>';
+    }
+
+    diagram += '<td class="summary">%</td></tr>\n<tr class="pdindex">';
+    for (var i = 0; i <= numClasses; i++) {
+        diagram += '<td>' + Math.floor(i * maxpoints / numClasses) + '</td>';
+    }
+    diagram += '<td class="summary"></td></tr>\n<tr class="pdindex">';
+    for (var i = 1; i <= numClasses; i++) {
+        diagram += '<td>' + Math.floor(i * maxpoints / numClasses - 1) + '</td>';
+    }
+    diagram += '<td></td><td class="summary"></td></tr></table>';
+    var table = document.createElement('div');
+    table.innerHTML = diagram;
+    document.querySelector('table.scorestable').after(table);
 }
 
 function extractData() {
@@ -132,6 +193,7 @@ if (window.location.pathname.endsWith('/TutorRequest')) {
 } else if (window.location.pathname.endsWith('/ShowGlobalStatistics')) {
     setTimeout(() => {
         var data = loadData();
+        addOverviewDiagram(data, getMaxPoints(), 20);
         addDiagramLabels(data);
     }, 500);
 };
