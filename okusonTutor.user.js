@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         Okuson Tutor
 // @namespace    https://github.com/L0GL0G/okusonTutor/
-// @version      0.1
+// @version      0.2
 // @description  Enhances Tutor experience with Okuson
-// @updateURL    https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.js
-// @downloadURL  https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.js
+// @updateURL    https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
+// @downloadURL  https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
 // @author       Lars Göttgens
 // @match        https://www2.math.rwth-aachen.de/*
 // @grant        none
