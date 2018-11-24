@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Okuson Tutor
 // @namespace    https://github.com/L0GL0G/okusonTutor/
-// @version      0.2
+// @version      0.2.1
 // @description  Enhances Tutor experience with Okuson
 // @updateURL    https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
 // @downloadURL  https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
@@ -85,12 +85,13 @@ function addDiagramLabels(data) {
 }
 
 function addOverviewDiagram(data, maxpoints, numClasses) {
+    var i;
     var studentsByPoints = new Map();
-    for (var i = 0; i <= numClasses; i++) {
+    for (i = 0; i <= numClasses; i++) {
         studentsByPoints.set(i, new Array());
     }
     data.forEach(student => {
-        points = Object.values(student.points).reduce((a, b) => a + b, 0);
+        var points = Object.values(student.points).reduce((a, b) => a + b, 0);
         student.sum = points;
         points = Math.floor(points * numClasses / maxpoints);
         studentsByPoints.get(points).push(student);
@@ -104,26 +105,26 @@ function addOverviewDiagram(data, maxpoints, numClasses) {
         }
     });
     var diagram = '<h2>Overview</h2>\n<table class="pointdistribution">\n<tr class="pddata">';
-    for (var i = 0; i <= numClasses; i++) {
+    for (i = 0; i <= numClasses; i++) {
         var names = studentsByPoints.get(i).map(student => student.matrNr + ' ' + student.sum + ' ' + student.lastName + ', ' + student.firstName);
         names = names.reduce((a, b) => a + '\n' + b, '');
         diagram += '<td><img src="images/red.png" alt="" width="10px" height="' + Math.floor(200 * studentsByPoints.get(i).length / max) + 'px" title="' + names + '" /></td>';
     }
     diagram += '<td class="summary"></td></tr>\n<tr class="pdtext">';
-    for (var i = 0; i <= numClasses; i++) {
+    for (i = 0; i <= numClasses; i++) {
         diagram += '<td>' + studentsByPoints.get(i).length + '</td>';
     }
     diagram += '<td class="summary">Sum: ' + sum + '</td></tr>\n<tr class="pdpercentage">';
-    for (var i = 0; i <= numClasses; i++) {
+    for (i = 0; i <= numClasses; i++) {
         diagram += '<td>' + Math.floor(studentsByPoints.get(i).length * 100 / sum) + '</td>';
     }
 
     diagram += '<td class="summary">%</td></tr>\n<tr class="pdindex">';
-    for (var i = 0; i <= numClasses; i++) {
+    for (i = 0; i <= numClasses; i++) {
         diagram += '<td>' + Math.floor(i * maxpoints / numClasses) + '</td>';
     }
     diagram += '<td class="summary"></td></tr>\n<tr class="pdindex">';
-    for (var i = 1; i <= numClasses; i++) {
+    for (i = 1; i <= numClasses; i++) {
         diagram += '<td>' + Math.floor(i * maxpoints / numClasses - 1) + '</td>';
     }
     diagram += '<td></td><td class="summary"></td></tr></table>';
@@ -141,8 +142,8 @@ function extractData() {
         var matrNr = parseInt(input.name.substring(1));
         var obj = new Object();
         obj.points = parseFloat(input.value);
-        obj.lastName = new RegExp(matrNr + '<\\/td><td( class="trenner")?>([a-zA-Z\x7f-\xff ]+), ([a-zA-Z\x7f-\xff ]+)<').exec(html)[2];
-        obj.firstName = new RegExp(matrNr + '<\\/td><td( class="trenner")?>([a-zA-Z\x7f-\xff ]+), ([a-zA-Z\x7f-\xff ]+)<').exec(html)[3];
+        obj.lastName = new RegExp(matrNr + '<\\/td><td( class="trenner")?>([-a-zA-Z\x7f-\xff ]+), ([-a-zA-Z\x7f-\xff ]+)<').exec(html)[2];
+        obj.firstName = new RegExp(matrNr + '<\\/td><td( class="trenner")?>([-a-zA-Z\x7f-\xff ]+), ([-a-zA-Z\x7f-\xff ]+)<').exec(html)[3];
         return [matrNr, obj];
     }));
     return points;
