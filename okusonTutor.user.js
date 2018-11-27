@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Okuson Tutor
 // @namespace    https://github.com/L0GL0G/okusonTutor/
-// @version      0.2.1
+// @version      0.3
 // @description  Enhances Tutor experience with Okuson
 // @updateURL    https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
 // @downloadURL  https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
@@ -104,33 +104,52 @@ function addOverviewDiagram(data, maxpoints, numClasses) {
             max = array.length;
         }
     });
-    var diagram = '<h2>Overview</h2>\n<table class="pointdistribution">\n<tr class="pddata">';
+    var diagramOV = '<h2>Points Overview</h2>\n<table class="pointdistribution">\n<tr class="pddata">';
     for (i = 0; i <= numClasses; i++) {
         var names = studentsByPoints.get(i).map(student => student.matrNr + ' ' + student.sum + ' ' + student.lastName + ', ' + student.firstName);
         names = names.reduce((a, b) => a + '\n' + b, '');
-        diagram += '<td><img src="images/red.png" alt="" width="10px" height="' + Math.floor(200 * studentsByPoints.get(i).length / max) + 'px" title="' + names + '" /></td>';
+        diagramOV += '<td><img src="images/red.png" alt="" width="10px" height="' + Math.floor(200 * studentsByPoints.get(i).length / max) + 'px" title="' + names + '" /></td>';
     }
-    diagram += '<td class="summary"></td></tr>\n<tr class="pdtext">';
+    diagramOV += '<td class="summary"></td></tr>\n<tr class="pdtext">';
     for (i = 0; i <= numClasses; i++) {
-        diagram += '<td>' + studentsByPoints.get(i).length + '</td>';
+        diagramOV += '<td>' + studentsByPoints.get(i).length + '</td>';
     }
-    diagram += '<td class="summary">Sum: ' + sum + '</td></tr>\n<tr class="pdpercentage">';
+    diagramOV += '<td class="summary">Sum: ' + sum + '</td></tr>\n<tr class="pdpercentage">';
     for (i = 0; i <= numClasses; i++) {
-        diagram += '<td>' + Math.floor(studentsByPoints.get(i).length * 100 / sum) + '</td>';
+        diagramOV += '<td>' + Math.floor(studentsByPoints.get(i).length * 100 / sum) + '</td>';
     }
 
-    diagram += '<td class="summary">%</td></tr>\n<tr class="pdindex">';
+    diagramOV += '<td class="summary">%</td></tr>\n<tr class="pdindex">';
     for (i = 0; i <= numClasses; i++) {
-        diagram += '<td>' + Math.floor(i * maxpoints / numClasses) + '</td>';
+        diagramOV += '<td>' + Math.floor(i * maxpoints / numClasses) + '</td>';
     }
-    diagram += '<td class="summary"></td></tr>\n<tr class="pdindex">';
+    diagramOV += '<td class="summary"></td></tr>\n<tr class="pdindex">';
     for (i = 1; i <= numClasses; i++) {
-        diagram += '<td>' + Math.floor(i * maxpoints / numClasses - 1) + '</td>';
+        diagramOV += '<td>' + Math.floor(i * maxpoints / numClasses - 1) + '</td>';
     }
-    diagram += '<td></td><td class="summary"></td></tr></table>';
-    var table = document.createElement('div');
-    table.innerHTML = diagram;
-    document.querySelector('table.scorestable').after(table);
+    diagramOV += '<td></td><td class="summary"></td></tr></table>';
+    var tableOV = document.createElement('div');
+    tableOV.innerHTML = diagramOV;
+
+    var passed = 0;
+    var failed = 0;
+    data.forEach(student => {
+        if (student.sum >= 0.5 * maxpoints) {
+            passed++;
+        } else {
+            failed++;
+        }
+    })
+    var diagramPF = '<h2>Pass / Fail Overview</h2>\n<table><tr><td><b>&ge; 50%</b></td><td>' + passed + '</td><td>' + Math.floor(passed / sum * 100) +
+        '%</td><td><img src="images/red.png" alt="" width="' + Math.floor(passed / sum * 300) +
+        'px" height="10px"></td></tr><tr><td><b>&lt; 50%</b></td><td>' + failed + '</td><td>' + Math.floor(failed / sum * 100) +
+        '%</td><td><img src="images/red.png" alt="" width="' + Math.floor(failed / sum * 300) +
+        'px" height="10px"></td></tr></table>';
+    var tablePF = document.createElement('div');
+    tablePF.innerHTML = diagramPF;
+
+    document.querySelector('table.scorestable').after(tablePF);
+    tablePF.after(tableOV);
 }
 
 function extractData() {
@@ -183,7 +202,7 @@ function loadData(lecture = getLecture()) {
     }
 }
 
-(function() {
+(function () {
     if (window.location.pathname.endsWith('/TutorRequest')) {
         document.getElementsByName('action')[0].addEventListener('click', function () {
             saveData(mergeData(loadData(), extractData()));
