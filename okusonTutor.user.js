@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Okuson Tutor
 // @namespace    https://github.com/L0GL0G/okusonTutor/
-// @version      0.3.1
+// @version      0.3.2
 // @description  Enhances Tutor experience with Okuson
 // @updateURL    https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
 // @downloadURL  https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
@@ -93,6 +93,9 @@ function addOverviewDiagram(data, maxpoints, numClasses) {
     data.forEach(student => {
         var points = Object.values(student.points).reduce((a, b) => a + b, 0);
         student.sum = points;
+        if (points === maxpoints) {
+            points -= 0.001;
+        }
         points = Math.floor(points * numClasses / maxpoints);
         studentsByPoints.get(points).push(student);
     });
@@ -105,27 +108,31 @@ function addOverviewDiagram(data, maxpoints, numClasses) {
         }
     });
     var diagramOV = '<h2>Points Overview</h2>\n<table class="pointdistribution">\n<tr class="pddata">';
-    for (i = 0; i <= numClasses; i++) {
+    for (i = 0; i < numClasses; i++) {
         var names = studentsByPoints.get(i).map(student => student.matrNr + ' ' + student.sum + ' ' + student.lastName + ', ' + student.firstName);
         names = names.reduce((a, b) => a + '\n' + b, '');
         diagramOV += '<td><img src="images/red.png" alt="" width="10px" height="' + Math.floor(200 * studentsByPoints.get(i).length / max) + 'px" title="' + names + '" /></td>';
     }
     diagramOV += '<td class="summary"></td></tr>\n<tr class="pdtext">';
-    for (i = 0; i <= numClasses; i++) {
+    for (i = 0; i < numClasses; i++) {
         diagramOV += '<td>' + studentsByPoints.get(i).length + '</td>';
     }
     diagramOV += '<td class="summary">Sum: ' + sum + '</td></tr>\n<tr class="pdpercentage">';
-    for (i = 0; i <= numClasses; i++) {
+    for (i = 0; i < numClasses; i++) {
         diagramOV += '<td>' + Math.floor(studentsByPoints.get(i).length * 100 / sum) + '</td>';
     }
 
     diagramOV += '<td class="summary">%</td></tr>\n<tr class="pdindex">';
-    for (i = 0; i <= numClasses; i++) {
+    for (i = 0; i < numClasses; i++) {
         diagramOV += '<td>' + Math.floor(i * maxpoints / numClasses) + '</td>';
     }
     diagramOV += '<td class="summary"></td></tr>\n<tr class="pdindex">';
     for (i = 1; i <= numClasses; i++) {
-        diagramOV += '<td>' + Math.floor(i * maxpoints / numClasses - 1) + '</td>';
+        var temp = Math.floor(i * maxpoints / numClasses - 1);
+        if (i == numClasses) {
+            temp = maxpoints;
+        }
+        diagramOV += '<td>' + temp + '</td>';
     }
     diagramOV += '<td></td><td class="summary"></td></tr></table>';
     var tableOV = document.createElement('div');
