@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Okuson Tutor
 // @namespace    https://github.com/L0GL0G/okusonTutor/
-// @version      0.3.3
+// @version      0.3.4
 // @description  Enhances Tutor experience with Okuson
 // @updateURL    https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
 // @downloadURL  https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
@@ -204,12 +204,12 @@ function isIterable(value) {
     return Symbol.iterator in Object(value);
 }
 
-function saveData(data, lecture = getLecture()) {
-    window.localStorage.setItem(lecture, JSON.stringify([...data]));
+function saveData(data, lecture = getLecture(), groupNr = getGroupNr()) {
+    window.localStorage.setItem(lecture + ', ' + groupNr, JSON.stringify([...data]));
 }
 
-function loadData(lecture = getLecture()) {
-    var data = JSON.parse(window.localStorage.getItem(lecture));
+function loadData(lecture = getLecture(), groupNr = getGroupNr()) {
+    var data = JSON.parse(window.localStorage.getItem(lecture + ', ' + groupNr));
     if (isIterable(data)) {
         return new Map(data);
     } else {
