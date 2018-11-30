@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Okuson Tutor
 // @namespace    https://github.com/L0GL0G/okusonTutor/
-// @version      0.3.2
+// @version      0.3.3
 // @description  Enhances Tutor experience with Okuson
 // @updateURL    https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
 // @downloadURL  https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
@@ -140,18 +140,26 @@ function addOverviewDiagram(data, maxpoints, numClasses) {
 
     var passed = 0;
     var failed = 0;
+    var passedStudents = new Array();
+    var failedStudents = new Array();
     data.forEach(student => {
         if (student.sum >= 0.5 * maxpoints) {
             passed++;
+            passedStudents.push(student);
         } else {
             failed++;
+            failedStudents.push(student);
         }
     })
+    passedStudents = passedStudents.sort((a, b) => b.sum - a.sum).map(student => student.matrNr + ' ' + student.sum + ' ' + student.lastName + ', ' + student.firstName);
+    passedStudents = passedStudents.reduce((a, b) => a + '\n' + b, '');
+    failedStudents = failedStudents.sort((a, b) => a.sum - b.sum).map(student => student.matrNr + ' ' + student.sum + ' ' + student.lastName + ', ' + student.firstName);
+    failedStudents = failedStudents.reduce((a, b) => a + '\n' + b, '');
     var diagramPF = '<h2>Pass / Fail Overview</h2>\n<table><tr><td><b>&ge; 50%</b></td><td>' + passed + '</td><td>' + Math.floor(passed / sum * 100) +
         '%</td><td><img src="images/red.png" alt="" width="' + Math.floor(passed / sum * 300) +
-        'px" height="10px"></td></tr><tr><td><b>&lt; 50%</b></td><td>' + failed + '</td><td>' + Math.floor(failed / sum * 100) +
+        'px" height="10px" title="' + passedStudents + '"></td></tr><tr><td><b>&lt; 50%</b></td><td>' + failed + '</td><td>' + Math.floor(failed / sum * 100) +
         '%</td><td><img src="images/red.png" alt="" width="' + Math.floor(failed / sum * 300) +
-        'px" height="10px"></td></tr></table>';
+        'px" height="10px" title="' + failedStudents + '"></td></tr></table>';
     var tablePF = document.createElement('div');
     tablePF.innerHTML = diagramPF;
 
