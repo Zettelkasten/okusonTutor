@@ -1,8 +1,7 @@
-/* eslint-disable no-cond-assign */
 // ==UserScript==
 // @name         Okuson Tutor
 // @namespace    https://github.com/L0GL0G/okusonTutor/
-// @version      0.4.1
+// @version      0.5
 // @description  Enhances Tutor experience with Okuson
 // @updateURL    https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
 // @downloadURL  https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
@@ -61,6 +60,30 @@ function getMaxPoints() {
     return points;
 }
 
+function isIterable(value) {
+    return Symbol.iterator in Object(value);
+}
+
+function median(values) {
+    values.sort(function (a, b) {
+        return a - b;
+    });
+    if (values.length === 0) {
+        return 0
+    }
+    var half = Math.floor(values.length / 2);
+    if (values.length % 2) {
+        return values[half];
+    } else {
+        return (values[half - 1] + values[half]) / 2.0;
+    }
+}
+
+function average(values) {
+    var sum = values.reduce((a, b) => a + b, 0);
+    return sum / values.length;
+}
+
 function mergeData(oldData, newData, exNr = getExerciseNr()) {
     var data = new Map();
     newData.forEach((obj, matrNr) => {
@@ -78,10 +101,6 @@ function mergeData(oldData, newData, exNr = getExerciseNr()) {
     return data;
 }
 
-function isIterable(value) {
-    return Symbol.iterator in Object(value);
-}
-
 function saveData(data, lecture = getLecture(), groupNr = getGroupNr()) {
     window.localStorage.setItem(lecture + ', ' + groupNr, JSON.stringify([...data]));
 }
@@ -92,6 +111,40 @@ function loadData(lecture = getLecture(), groupNr = getGroupNr()) {
         return new Map(data);
     } else {
         return new Map();
+    }
+}
+
+function checkData(data, exNr, count, av, med) {
+    var list = new Array();
+    data.forEach(student => {
+        if (student.points.hasOwnProperty(exNr) && student.points[exNr] !== null) {
+            list.push(student.points[exNr]);
+        }
+    });
+    if (list.length !== count) {
+        return false;
+    }
+    if (Math.round(average(list) * 100) !== av * 100) {
+        return false;
+    }
+    if (median(list) !== med) {
+        return false;
+    }
+    return true;
+}
+
+function addDataVerification(data) {
+    var table = document.getElementsByClassName('scorestable')[0];
+    var regex = /<tr><td>(\d+)<\/td><td>(\d+)<\/td><td>([.\d]+)<\/td><td>([.\d]+)<\/td>/gm;
+    var m;
+    while (m = regex.exec(table.innerHTML)) {
+        if (m) {
+            var checked = checkData(data, parseInt(m[1]), parseInt(m[2]), parseFloat(m[3]), parseFloat(m[4]));
+            if (!checked) {
+                var td = Array.from(table.getElementsByTagName('td')).filter(x => parseInt(x.innerHTML) == parseInt(m[1]))[0];
+                td.bgColor = 'Red';
+            }
+        }
     }
 }
 
@@ -215,7 +268,7 @@ function addPassFail(data, maxpoints, ignore0P = true) {
         tablePF.innerHTML = diagramPF;
         document.querySelector('table.scorestable').after(tablePF);
     }
-    document.getElementById('ignore0P').addEventListener('click', function() {
+    document.getElementById('ignore0P').addEventListener('click', function () {
         addPassFail(loadData(), getMaxPoints(), document.getElementById('ignore0P').checked)
     });
 }
@@ -242,6 +295,7 @@ function extractData() {
         })
     } else if (window.location.pathname.endsWith('/ShowGlobalStatistics')) {
         var data = loadData();
+        addDataVerification(data);
         addPassFail(data, getMaxPoints());
         addOverviewDiagram(data, getMaxPoints(), 20);
         addDiagramLabels(data);
