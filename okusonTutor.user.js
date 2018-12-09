@@ -1,8 +1,7 @@
-/* eslint-disable no-cond-assign */
 // ==UserScript==
 // @name         Okuson Tutor
 // @namespace    https://github.com/L0GL0G/okusonTutor/
-// @version      0.4.1
+// @version      0.5
 // @description  Enhances Tutor experience with Okuson
 // @updateURL    https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
 // @downloadURL  https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
@@ -65,11 +64,6 @@ function isIterable(value) {
     return Symbol.iterator in Object(value);
 }
 
-function highest(values) {
-    values.sort((a, b) => a - b);
-    return values[values.length - 1];
-}
-
 function median(values) {
     values.sort(function (a, b) {
         return a - b;
@@ -120,7 +114,7 @@ function loadData(lecture = getLecture(), groupNr = getGroupNr()) {
     }
 }
 
-function checkData(data, exNr, count, av, med, high) {
+function checkData(data, exNr, count, av, med) {
     var list = new Array();
     data.forEach(student => {
         if (student.points.hasOwnProperty(exNr) && student.points[exNr] !== null) {
@@ -136,10 +130,22 @@ function checkData(data, exNr, count, av, med, high) {
     if (median(list) !== med) {
         return false;
     }
-    if (highest(list) != high) {
-        return false;
-    }
     return true;
+}
+
+function addDataVerification(data) {
+    var table = document.getElementsByClassName('scorestable')[0];
+    var regex = /<tr><td>(\d+)<\/td><td>(\d+)<\/td><td>([.\d]+)<\/td><td>([.\d]+)<\/td>/gm;
+    var m;
+    while (m = regex.exec(table.innerHTML)) {
+        if (m) {
+            var checked = checkData(data, parseInt(m[1]), parseInt(m[2]), parseFloat(m[3]), parseFloat(m[4]));
+            if (!checked) {
+                var td = Array.from(table.getElementsByTagName('td')).filter(x => parseInt(x.innerHTML) == parseInt(m[1]))[0];
+                td.bgColor = 'Red';
+            }
+        }
+    }
 }
 
 function addDiagramLabels(data) {
@@ -289,6 +295,7 @@ function extractData() {
         })
     } else if (window.location.pathname.endsWith('/ShowGlobalStatistics')) {
         var data = loadData();
+        addDataVerification(data);
         addPassFail(data, getMaxPoints());
         addOverviewDiagram(data, getMaxPoints(), 20);
         addDiagramLabels(data);
