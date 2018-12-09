@@ -49,9 +49,10 @@ function getLecture() {
 
 function getMaxPoints() {
     var points = 0;
-    var regex = /<tr><td>[\.\d]+<\/td><td>(\d+)<\/td>(<td>[\.\d]+<\/td>){3}<td>(\d+)<\/td>(<td>[\.\d]+<\/td>){5}<\/tr>/gm;
+    var regex = /<tr><td>[.\d]+<\/td><td>(\d+)<\/td>(<td>[.\d]+<\/td>){3}<td>(\d+)<\/td>(<td>[.\d]+<\/td>){5}<\/tr>/gm;
     var html = document.body.innerHTML;
     var m;
+    // eslint-disable-next-line no-cond-assign
     while (m = regex.exec(html)) {
         if (m && parseInt(m[1]) > 0) {
             points += parseInt(m[3]);
@@ -138,11 +139,20 @@ function addOverviewDiagram(data, maxpoints, numClasses) {
     var tableOV = document.createElement('div');
     tableOV.innerHTML = diagramOV;
 
+    var tablePF = document.getElementById('passFailDiv');
+    tablePF.after(tableOV);
+}
+
+function addPassFail(data, maxpoints) {
     var passed = 0;
     var failed = 0;
     var passedStudents = new Array();
     var failedStudents = new Array();
+    var sum = 0;
     data.forEach(student => {
+        sum++;
+        var points = Object.values(student.points).reduce((a, b) => a + b, 0);
+        student.sum = points;
         if (student.sum >= 0.5 * maxpoints) {
             passed++;
             passedStudents.push(student);
@@ -155,20 +165,18 @@ function addOverviewDiagram(data, maxpoints, numClasses) {
     passedStudents = passedStudents.reduce((a, b) => a + '\n' + b, '');
     failedStudents = failedStudents.sort((a, b) => a.sum - b.sum).map(student => student.matrNr + ' ' + student.sum + ' ' + student.lastName + ', ' + student.firstName);
     failedStudents = failedStudents.reduce((a, b) => a + '\n' + b, '');
-    var diagramPF = '<h2>Pass / Fail Overview</h2>\n<table><tr><td><b>&ge; 50%</b></td><td>' + passed + '</td><td>' + Math.floor(passed / sum * 100) +
+    var diagramPF = '<h2>Pass / Fail Overview</h2>\n<table id="passFailTable"><tr><td><b>&ge; 50%</b></td><td>' + passed + '</td><td>' + Math.floor(passed / sum * 100) +
         '%</td><td><img src="images/red.png" alt="" width="' + Math.floor(passed / sum * 300) +
         'px" height="10px" title="' + passedStudents + '"></td></tr><tr><td><b>&lt; 50%</b></td><td>' + failed + '</td><td>' + Math.floor(failed / sum * 100) +
         '%</td><td><img src="images/red.png" alt="" width="' + Math.floor(failed / sum * 300) +
         'px" height="10px" title="' + failedStudents + '"></td></tr></table>';
     var tablePF = document.createElement('div');
+    tablePF.id = 'passFailDiv';
     tablePF.innerHTML = diagramPF;
-
     document.querySelector('table.scorestable').after(tablePF);
-    tablePF.after(tableOV);
 }
 
 function extractData() {
-    var data = new Map();
     var html = document.body.innerHTML;
     var inputs = Array.from(document.getElementsByTagName('input'));
     inputs = inputs.filter(input => /^P\d{5,6}$/m.test(input.name));
@@ -224,7 +232,8 @@ function loadData(lecture = getLecture(), groupNr = getGroupNr()) {
         })
     } else if (window.location.pathname.endsWith('/ShowGlobalStatistics')) {
         var data = loadData();
+        addPassFail(data, getMaxPoints());
         addOverviewDiagram(data, getMaxPoints(), 20);
         addDiagramLabels(data);
-    };
+    }
 })();
