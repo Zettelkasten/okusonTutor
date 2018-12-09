@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Okuson Tutor
 // @namespace    https://github.com/L0GL0G/okusonTutor/
-// @version      0.4
+// @version      0.4.1
 // @description  Enhances Tutor experience with Okuson
 // @updateURL    https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
 // @downloadURL  https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
@@ -59,6 +59,40 @@ function getMaxPoints() {
         }
     }
     return points;
+}
+
+function mergeData(oldData, newData, exNr = getExerciseNr()) {
+    var data = new Map();
+    newData.forEach((obj, matrNr) => {
+        if (oldData.has(matrNr)) {
+            var student = Student.from(oldData.get(matrNr));
+            student.setPoints(exNr, obj.points);
+            student.firstName = obj.firstName;
+            student.lastName = obj.lastName;
+            data.set(matrNr, student);
+        } else {
+            student = new Student(matrNr, obj.firstName, obj.lastName).setPoints(exNr, obj.points);
+            data.set(matrNr, student);
+        }
+    });
+    return data;
+}
+
+function isIterable(value) {
+    return Symbol.iterator in Object(value);
+}
+
+function saveData(data, lecture = getLecture(), groupNr = getGroupNr()) {
+    window.localStorage.setItem(lecture + ', ' + groupNr, JSON.stringify([...data]));
+}
+
+function loadData(lecture = getLecture(), groupNr = getGroupNr()) {
+    var data = JSON.parse(window.localStorage.getItem(lecture + ', ' + groupNr));
+    if (isIterable(data)) {
+        return new Map(data);
+    } else {
+        return new Map();
+    }
 }
 
 function addDiagramLabels(data) {
@@ -167,7 +201,7 @@ function addPassFail(data, maxpoints, ignore0P = true) {
     passedStudents = passedStudents.reduce((a, b) => a + '\n' + b, '');
     failedStudents = failedStudents.sort((a, b) => a.sum - b.sum).map(student => student.matrNr + ' ' + student.sum + ' ' + student.lastName + ', ' + student.firstName);
     failedStudents = failedStudents.reduce((a, b) => a + '\n' + b, '');
-    var diagramPF = '<h2>Pass / Fail Overview</h2>\n<p><input type="checkbox" name="ignore0P" id="ignore0P" onclick="addPassFail(loadData(),getMaxPoints(),this.checked)"' + (ignore0P ? ' checked' : '') + '>\n<label for="ignore0P">Ignore students with 0 Points</label></p>\n<table id="passFailTable"><tr><td><b>&ge; 50%</b></td><td>' + passed + '</td><td>' + Math.floor(passed / sum * 100) +
+    var diagramPF = '<h2>Pass / Fail Overview</h2>\n<p><input type="checkbox" name="ignore0P" id="ignore0P"' + (ignore0P ? ' checked' : '') + '>\n<label for="ignore0P">Ignore students with 0 Points</label></p>\n<table id="passFailTable"><tr><td><b>&ge; 50%</b></td><td>' + passed + '</td><td>' + Math.floor(passed / sum * 100) +
         '%</td><td><img src="images/red.png" alt="" width="' + Math.floor(passed / sum * 300) +
         'px" height="10px" title="' + passedStudents + '"></td></tr><tr><td><b>&lt; 50%</b></td><td>' + failed + '</td><td>' + Math.floor(failed / sum * 100) +
         '%</td><td><img src="images/red.png" alt="" width="' + Math.floor(failed / sum * 300) +
@@ -181,6 +215,9 @@ function addPassFail(data, maxpoints, ignore0P = true) {
         tablePF.innerHTML = diagramPF;
         document.querySelector('table.scorestable').after(tablePF);
     }
+    document.getElementById('ignore0P').addEventListener('click', function() {
+        addPassFail(loadData(), getMaxPoints(), document.getElementById('ignore0P').checked)
+    });
 }
 
 function extractData() {
@@ -196,40 +233,6 @@ function extractData() {
         return [matrNr, obj];
     }));
     return points;
-}
-
-function mergeData(oldData, newData, exNr = getExerciseNr()) {
-    var data = new Map();
-    newData.forEach((obj, matrNr) => {
-        if (oldData.has(matrNr)) {
-            var student = Student.from(oldData.get(matrNr));
-            student.setPoints(exNr, obj.points);
-            student.firstName = obj.firstName;
-            student.lastName = obj.lastName;
-            data.set(matrNr, student);
-        } else {
-            student = new Student(matrNr, obj.firstName, obj.lastName).setPoints(exNr, obj.points);
-            data.set(matrNr, student);
-        }
-    });
-    return data;
-}
-
-function isIterable(value) {
-    return Symbol.iterator in Object(value);
-}
-
-function saveData(data, lecture = getLecture(), groupNr = getGroupNr()) {
-    window.localStorage.setItem(lecture + ', ' + groupNr, JSON.stringify([...data]));
-}
-
-function loadData(lecture = getLecture(), groupNr = getGroupNr()) {
-    var data = JSON.parse(window.localStorage.getItem(lecture + ', ' + groupNr));
-    if (isIterable(data)) {
-        return new Map(data);
-    } else {
-        return new Map();
-    }
 }
 
 (function () {
