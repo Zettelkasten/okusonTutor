@@ -66,7 +66,7 @@ function isIterable(value) {
 }
 
 function highest(values) {
-    values.sort();
+    values.sort((a, b) => a - b);
     return values[values.length - 1];
 }
 
@@ -118,6 +118,28 @@ function loadData(lecture = getLecture(), groupNr = getGroupNr()) {
     } else {
         return new Map();
     }
+}
+
+function checkData(data, exNr, count, av, med, high) {
+    var list = new Array();
+    data.forEach(student => {
+        if (student.points.hasOwnProperty(exNr) && student.points[exNr] !== null) {
+            list.push(student.points[exNr]);
+        }
+    });
+    if (list.length !== count) {
+        return false;
+    }
+    if (Math.round(average(list) * 100) !== av * 100) {
+        return false;
+    }
+    if (median(list) !== med) {
+        return false;
+    }
+    if (highest(list) != high) {
+        return false;
+    }
+    return true;
 }
 
 function addDiagramLabels(data) {
