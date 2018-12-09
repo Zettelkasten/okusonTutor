@@ -61,6 +61,35 @@ function getMaxPoints() {
     return points;
 }
 
+function isIterable(value) {
+    return Symbol.iterator in Object(value);
+}
+
+function highest(values) {
+    values.sort();
+    return values[values.length - 1];
+}
+
+function median(values) {
+    values.sort(function (a, b) {
+        return a - b;
+    });
+    if (values.length === 0) {
+        return 0
+    }
+    var half = Math.floor(values.length / 2);
+    if (values.length % 2) {
+        return values[half];
+    } else {
+        return (values[half - 1] + values[half]) / 2.0;
+    }
+}
+
+function average(values) {
+    var sum = values.reduce((a, b) => a + b, 0);
+    return sum / values.length;
+}
+
 function mergeData(oldData, newData, exNr = getExerciseNr()) {
     var data = new Map();
     newData.forEach((obj, matrNr) => {
@@ -76,10 +105,6 @@ function mergeData(oldData, newData, exNr = getExerciseNr()) {
         }
     });
     return data;
-}
-
-function isIterable(value) {
-    return Symbol.iterator in Object(value);
 }
 
 function saveData(data, lecture = getLecture(), groupNr = getGroupNr()) {
@@ -215,7 +240,7 @@ function addPassFail(data, maxpoints, ignore0P = true) {
         tablePF.innerHTML = diagramPF;
         document.querySelector('table.scorestable').after(tablePF);
     }
-    document.getElementById('ignore0P').addEventListener('click', function() {
+    document.getElementById('ignore0P').addEventListener('click', function () {
         addPassFail(loadData(), getMaxPoints(), document.getElementById('ignore0P').checked)
     });
 }
