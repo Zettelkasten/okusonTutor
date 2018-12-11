@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Okuson Tutor
 // @namespace    https://github.com/L0GL0G/okusonTutor/
-// @version      0.5
+// @version      0.5.1
 // @description  Enhances Tutor experience with Okuson
 // @updateURL    https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
 // @downloadURL  https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
@@ -141,7 +141,7 @@ function addDataVerification(data) {
         if (m) {
             var checked = checkData(data, parseInt(m[1]), parseInt(m[2]), parseFloat(m[3]), parseFloat(m[4]));
             if (!checked) {
-                var td = Array.from(table.getElementsByTagName('td')).filter(x => parseInt(x.innerHTML) == parseInt(m[1]))[0];
+                var td = Array.from(table.getElementsByTagName('tr')).filter(x => parseInt(x.firstChild.innerHTML) == parseInt(m[1]))[0].firstChild;
                 td.bgColor = 'Red';
             }
         }
