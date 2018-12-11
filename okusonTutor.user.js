@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Okuson Tutor
 // @namespace    https://github.com/L0GL0G/okusonTutor/
-// @version      0.5.1
+// @version      0.5.2
 // @description  Enhances Tutor experience with Okuson
 // @updateURL    https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
 // @downloadURL  https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
@@ -49,7 +49,7 @@ function getLecture() {
 
 function getMaxPoints() {
     var points = 0;
-    var regex = /<tr><td>[.\d]+<\/td><td>(\d+)<\/td>(<td>[.\d]+<\/td>){3}<td>(\d+)<\/td>(<td>[.\d]+<\/td>){5}<\/tr>/gm;
+    var regex = /<tr><td[ ="A-Za-z]*>[.\d]+<\/td><td>(\d+)<\/td>(<td>[.\d]+<\/td>){3}<td>(\d+)<\/td>(<td>[.\d]+<\/td>){5}<\/tr>/gm;
     var html = document.body.innerHTML;
     var m;
     while (m = regex.exec(html)) {
