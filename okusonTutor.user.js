@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Okuson Tutor
 // @namespace    https://github.com/L0GL0G/okusonTutor/
-// @version      0.5.2
+// @version      0.5.3
 // @description  Enhances Tutor experience with Okuson
 // @updateURL    https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
 // @downloadURL  https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
@@ -81,7 +81,7 @@ function median(values) {
 
 function average(values) {
     var sum = values.reduce((a, b) => a + b, 0);
-    return sum / values.length;
+    return values.length > 0 ? sum / values.length : 0;
 }
 
 function mergeData(oldData, newData, exNr = getExerciseNr()) {
