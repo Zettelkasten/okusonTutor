@@ -6,7 +6,9 @@
 // @updateURL    https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
 // @downloadURL  https://raw.githubusercontent.com/L0GL0G/okusonTutor/master/okusonTutor.user.js
 // @author       Lars Göttgens
+// @author       Zettelkasten
 // @match        https://www2.math.rwth-aachen.de/*
+// @require      http://code.jquery.com/jquery-3.3.1.min.js
 // @grant        none
 // ==/UserScript==
 
@@ -273,6 +275,130 @@ function addPassFail(data, maxpoints, ignore0P = true) {
     });
 }
 
+
+let studentPointsSum = (student) => Object.values(student.points).reduce((a, b) => a + b);
+
+let sortByMatrNr = (a, b) => (String.toLocaleString(a.matrNr).localeCompare(b.matrNr));
+let sortByName = (a, b) => (String.toLocaleString(a.lastName + ', ' + a.firstName).localeCompare(b.lastName + ', ' + b.firstName));
+let sortByPointsSum = (a, b) => -1 * (studentPointsSum(a) - studentPointsSum(b));
+
+// Add list of students
+function addStudentList(data, sortBy = sortByMatrNr) {
+    let html = '';
+    html += '<div id="studentListDiv"><h2>Student List</h2>';
+    html += '<style>.exercisePoints { text-align: center; }</style>';
+    html += '<input type="text" class="studentListFilter" placeholder="Filter list &hellip;">'
+    html += '<table id="studentListTable">';
+    html += '</table>';
+    html += '<em class="studentListEmpty" style="display: none;">No entries found.</em>';
+    html += '</div>';
+    if ($('#studentListDiv').html()) {
+        $('#studentListDiv').html(html);
+    } else {
+        $('table').last().after(html);
+    }
+
+    updateStudentListData(data, sortBy);
+
+    // Handler for student list filter: Update table entries everytime filter changes
+    $('.studentListFilter').on('change keyup paste', function () { updateStudentListFilter($(this).val()); });
+}
+
+function updateStudentListData(data, sortBy) {
+    // find number of assignments we have data for
+    let assignmentSet = new Set();
+    data.forEach(student => (Object.keys(student.points).forEach(key => assignmentSet.add(key))));
+    let assignments = Array.from(assignmentSet).sort();
+
+    html = '<tr class="studentListHeader">';
+    html += '<th data-sortBy="matrNr">Matr. Nr.</th><th data-sortBy="name">Name</th><th data-sortBy="pointsSum">&Sigma;</th>';
+    html += assignments.map(a => '<th data-sortBy="pointsExercise" data-sortByExercise="' + a + '">' + a + '</th>').join('');
+    html += '</tr>';
+
+    let sortedData = Array.from(data.values()).sort(sortBy);
+
+    sortedData.forEach(student => {
+        html += '<tr data-keywords="' + student.matrNr + ' ' + student.lastName + ' ' + student.firstName + '" class="studentListRow">';
+        html += '<td>' + student.matrNr + '</td><td>' + student.lastName + ', ' + student.firstName + '</td>';
+        html += '<td class="exercisePoints exercisePointsSum">' + studentPointsSum(student) + '</td>';
+        html += assignments.map(a => {
+            if ((a in student.points) && student.points[a] !== null) {
+                return '<td class="exercisePoints">' + student.points[a] + '</td>'
+            } else {
+                return '<td class="exercisePoints exercisePointsNull"> - </td>';
+            }
+        }).join('');
+        html += '</tr>';
+    });
+
+    $('#studentListTable').html(html);
+    updateStudentListFilter();
+
+    // Handler for student list sorting
+    $('.studentListHeader th').on('click', function() {
+        let sortBy = $(this).data('sortby');  // has to be lower case for some reason
+        if (sortBy !== undefined) {
+            let sorter;
+            switch (sortBy) {
+                default:
+                    return;
+                case 'matrNr':
+                    sorter = sortByMatrNr;
+                    break;
+                case 'name':
+                    sorter = sortByName;
+                    break;
+                case 'pointsSum':
+                    sorter = sortByPointsSum;
+                    break;
+                case 'pointsExercise':
+                    let exercise = $(this).data('sortbyexercise');
+                    sorter = (a, b) => -1 * (a.points[exercise] - b.points[exercise]);
+                    break;
+            }
+            updateStudentListData(data, sorter);
+        }
+    });
+}
+
+function updateStudentListFilter(queryString = $('.studentListFilter').val()) {
+    // sync all .studentListFilter texts (in case there are multiple ones)
+    $('.studentListFilter').val(queryString);
+    var query = queryString.toLowerCase();
+
+    var showSomething = false;
+    var terms = query.split(/[ ,;]+/);
+    if (terms.length) {
+      // filter search results
+      $('.studentListRow').each(function() {
+        var showThis = true;
+        var keywords = $(this).data('keywords').toLowerCase();
+        for (var i in terms) {
+          var term = terms[i];
+          // ensure term is contained in keywords
+          if (keywords.indexOf(term) === -1) {
+            showThis = false;
+            break;
+          }
+        }
+
+        if (showThis) {
+          $(this).show();
+          showSomething = true;
+        } else {
+          $(this).hide();
+        }
+      });
+    }
+
+    if (showSomething) {
+      $('.studentListEmpty').hide();
+    } else {
+      $('.studentListEmpty').show();
+    }
+}
+
+
 function extractData() {
     var html = document.body.innerHTML;
     var inputs = Array.from(document.getElementsByTagName('input'));
@@ -299,5 +425,6 @@ function extractData() {
         addPassFail(data, getMaxPoints());
         addOverviewDiagram(data, getMaxPoints(), 20);
         addDiagramLabels(data);
+        addStudentList(data);
     }
 })();
